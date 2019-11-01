@@ -1,0 +1,55 @@
+:root {
+  --dancer-color: rgb(100, 80, 100);
+  --dancer-height: 200px;
+  --dancer-width: 200px;
+}
+
+html, body {
+  background: black;
+}
+
+#dancer {
+	height: var(--dancer-height);
+	width: var(--dancer-width);
+  border-radius: 100%;
+	background-color: var(--dancer-color);
+
+	top: 500px;
+	bottom: 0;
+	left: 500px;
+	right: 0;
+
+  position: absolute;
+
+	margin: auto;
+}
+
+.mod-box {
+  border: 1px solid darkgreen;
+  height: 200px;
+  width: 200px;
+  position: relative;
+  z-index: 2;
+  margin: 8px;
+}
+.mod-box .cursor {
+  position: relative;
+  height: 10px;
+  width: 10px;
+  border-radius: 100%;
+  background-color: darkgreen;
+  z-index: 3;
+}
+.mod-box .label {
+  display: inline;
+  position: absolute;
+  bottom: 0;
+  float: left;
+  font-family: monospace;
+  text-transform: uppercase;
+  color: darkgreen;
+  padding: 8px;
+  user-select: none;
+  z-index: 1;
+
+}
