@@ -1,55 +1,85 @@
 :root {
-  --dancer-color: rgb(100, 80, 100);
+  --dancer-angle: 0deg;
   --dancer-height: 200px;
   --dancer-width: 200px;
+  --green: rgb(0, 200, 0);
 }
 
 html, body {
   background: black;
 }
 
-#dancer {
-	height: var(--dancer-height);
-	width: var(--dancer-width);
-  border-radius: 100%;
-	background-color: var(--dancer-color);
-
-	top: 500px;
-	bottom: 0;
-	left: 500px;
-	right: 0;
-
-  position: absolute;
-
-	margin: auto;
+#app-root {
+  display: grid;
+  grid-template-columns: 300px auto;
 }
 
 .mod-box {
-  border: 1px solid darkgreen;
+  margin: 16px;
+  display: flex;
+  flex-direction: column-reverse;
+}
+.mod-box__area {
   height: 200px;
   width: 200px;
   position: relative;
-  z-index: 2;
-  margin: 8px;
+  border: 1px solid var(--green);
+  border-radius: 8px;
 }
-.mod-box .cursor {
+.mod-box__cursor {
   position: relative;
   height: 10px;
   width: 10px;
   border-radius: 100%;
-  background-color: darkgreen;
-  z-index: 3;
+  background-color: var(--green);
 }
-.mod-box .label {
-  display: inline;
-  position: absolute;
-  bottom: 0;
-  float: left;
+.mod-box__label {
   font-family: monospace;
+  font-size: 1.1em;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  color: darkgreen;
+  color: var(--green);
   padding: 8px;
   user-select: none;
-  z-index: 1;
+}
 
+.dancer-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  max-width: 800px;
+}
+
+.soundbar {
+  height: 400px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.soundbar__bar {
+  border-top: 2px solid var(--green);
+  height: 0px;
+  width: 24px;
+}
+
+.dancer-container {
+  position: relative;
+  min-height: 400px;
+}
+
+#dancer {
+	height: var(--dancer-height);
+	width: var(--dancer-width);
+  border-radius: 100%;
+  background: url('http://localhost:3000/nekojiru.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: var(--dancer-height) var(--dancer-width);
+  transform: rotate(var(--dancer-angle));
+  position: absolute;
+  top: 50%;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  margin: 0 auto;
 }

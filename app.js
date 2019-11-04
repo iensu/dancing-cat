@@ -1,151 +1,194 @@
+const appRoot = $('#app-root');
 const style = window.getComputedStyle(document.documentElement);
 const defaultDancerHeight = parseInt(style.getPropertyValue('--dancer-height'));
 const defaultDancerWidth = parseInt(style.getPropertyValue('--dancer-width'));
 
-const sound = new Pizzicato.Sound({
-  source: 'file',
-  options: { path: 'http://localhost:3000/equals_sign_8_reprise.mp3' },
+const sound = new Pizzicato.Sound(
+  {
+    source: 'file',
+    options: { path: 'http://localhost:3000/equals_sign_8_reprise.mp3' },
+  },
+  () => {
+    dancerColumn.appendChild(createDancer());
+    dancerColumn.appendChild(createSoundbar());
+  }
+);
+
+const delay = new Pizzicato.Effects.Delay({ time: 0, feedback: 0, mix: 0 });
+const distortion = new Pizzicato.Effects.Distortion({ gain: 0 });
+const filter = new Pizzicato.Effects.LowPassFilter({
+  frequency: 22050,
+  peak: 0,
 });
-
-const delay = new Pizzicato.Effects.Delay();
-const distortion = new Pizzicato.Effects.Distortion();
-const filter = new Pizzicato.Effects.LowPassFilter();
+const flanger = new Pizzicato.Effects.Flanger({
+  time: 0,
+  speed: 0,
+  mix: 0,
+  feedback: 0,
+  depth: 0,
+});
 const analyzer = Pizzicato.context.createAnalyser();
-sound.addEffect(delay);
-sound.addEffect(distortion);
-sound.addEffect(filter);
-sound.connect(analyzer);
-
-analyzer.fftSize = 2048;
+analyzer.fftSize = 32;
 const bufferLength = analyzer.frequencyBinCount;
 const dataArray = new Uint8Array(bufferLength);
 analyzer.getByteTimeDomainData(dataArray);
 
-const audioElem = $('audio');
-const dancer = $('#dancer');
+sound.addEffect(distortion);
+sound.addEffect(flanger);
+sound.addEffect(delay);
+sound.addEffect(filter);
+sound.connect(analyzer);
 
-const track = audioContext.createMediaElementSource(audioElem);
+const effectsColumn = document.createElement('div');
+const dancerColumn = document.createElement('div');
 
-track
-  .connect(distortion)
-  .connect(delay)
-  .connect(filter)
-  .connect(analyzer)
-  .connect(audioContext.destination);
+effectsColumn.classList.add('effects-column');
+dancerColumn.classList.add('dancer-column');
 
-$('#delay').on('change', (e) => {
-  delay.delayTime.setValueAtTime(
-    Number(e.target.value),
-    audioContext.currentTime
-  );
-});
+appRoot.appendChild(effectsColumn);
+appRoot.appendChild(dancerColumn);
 
-$('body').appendChild(
+effectsColumn.appendChild(
   ModBox({
     id: 'filter',
     name: 'Lowpass filter',
     onChange: ({ detail }) => {
       const { x, y } = detail;
 
-      const freq = x * 2000;
-      const Q = y;
+      const freq = x * 22050;
+      const Q = y * 10;
 
-      filter.Q.setValueAtTime(Q, audioContext.currentTime);
-      filter.frequency.setValueAtTime(freq, audioContext.currentTime);
+      filter.frequency = freq;
+      filter.peak = Q;
     },
   })
 );
-
-$('body').appendChild(
+effectsColumn.appendChild(
   ModBox({
     id: 'delay',
     name: 'Delay',
     onChange: ({ detail }) => {
       const { x, y } = detail;
 
-      const delayTime = delay.delayTime.maxValue * x;
+      const time = x * 180;
       const feedback = y;
 
-      delay.delayTime.setTargetAtTime(delayTime, audioContext.currentTime, 0.1);
-      delayFeedback.gain.setTargetAtTime(
-        feedback,
-        audioContext.currentTime,
-        0.1
-      );
+      delay.time = time;
+      delay.feedback = feedback;
+      delay.mix = feedback;
     },
   })
 );
-
-$('body').appendChild(
+effectsColumn.appendChild(
   ModBox({
     id: 'dist',
     name: 'Distortion',
     onChange: ({ detail }) => {
-      distortion.curve = makeDistortionCurve(detail.y * 1000, detail.x * 44100);
+      distortion.gain = detail.y;
+    },
+  })
+);
+effectsColumn.appendChild(
+  ModBox({
+    id: 'flanger',
+    name: 'Flanger',
+    onChange: ({ detail }) => {
+      flanger.time = detail.x;
+      flanger.speed = detail.x;
+      flanger.depth = detail.y;
+      flanger.feedback = detail.y;
+      flanger.mix = detail.y;
     },
   })
 );
 
-const getOversample = (val) => {
-  if (val < 0.2) return 'none';
-  if (val > 0.7) return '4x';
+const updateCssProperty = (variable, value, unit) => {
+  const styles = getComputedStyle(document.documentElement);
+  const propertyValue = styles.getPropertyValue(variable);
 
-  return '2x';
+  const current = Number(propertyValue.replace(/deg|px/, ''));
+
+  if (Number.isNaN(current) || Number.isNaN(value)) return;
+
+  const val = Math.min(current + value * 10, 600);
+
+  document.documentElement.style.setProperty(variable, `${val}${unit}`);
 };
 
-const getRgbString = (offset) => {
-  const val = offset || 0;
+function danceCatDance() {
+  requestAnimationFrame(danceCatDance);
 
-  return `rgb(${val * 0.5}, ${val * 1.5}, ${val * 0.5})`;
-};
-
-const getSize = (offset, base) => {
-  return `${base + offset / 2}px`;
-};
-
-function makeDistortionCurve(amount = 0, n_samples = 44100) {
-  const k = amount;
-  const curve = new Float32Array(n_samples);
-  const deg = Math.PI / 180;
-  let x;
-
-  for (let i = 0; i < n_samples; ++i) {
-    x = (i * 2) / n_samples - 1;
-    curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
-  }
-  return curve;
-}
-
-let previous;
-
-function foo() {
-  requestAnimationFrame(foo);
+  if (!sound.playing) return;
 
   analyzer.getByteTimeDomainData(dataArray);
 
-  let result = 0;
+  let bass = 0;
+  let mid = 0;
+  let treble = 0;
+  let sum = 0;
 
   for (var i = 0; i < bufferLength; i++) {
-    result += dataArray[i];
+    const value = dataArray[i]; // 128.0;
+    sum += value;
+
+    if (i < 6) {
+      bass += value;
+    } else if (i < 10) {
+      mid += value;
+    } else {
+      treble += value;
+    }
   }
 
-  if (previous === result) return;
+  updateSoundbar(dataArray);
 
-  const offset = (result - previous) / 80 || 0;
-  previous = result;
-
-  document.documentElement.style.setProperty(
-    '--dancer-color',
-    getRgbString(offset)
-  );
-  document.documentElement.style.setProperty(
-    '--dancer-height',
-    getSize(offset, defaultDancerHeight)
-  );
-  document.documentElement.style.setProperty(
-    '--dancer-width',
-    getSize(offset, defaultDancerWidth)
-  );
+  updateCssProperty('--dancer-angle', 4 - treble / (sum / bufferLength), 'deg');
+  updateCssProperty('--dancer-height', 6 - mid / (sum / bufferLength), 'px');
+  updateCssProperty('--dancer-width', 6 - bass / (sum / bufferLength), 'px');
 }
 
-foo();
+danceCatDance();
+
+function updateSoundbar(values) {
+  const soundbars = $(`.soundbar`);
+
+  for (let i = 0; i < values.length; i++) {
+    const value = values[i];
+
+    if (soundbars) {
+      soundbars.children[i].style.height = `${parseInt(
+        400 * (value / 256) - 128
+      )}px`;
+    }
+  }
+}
+
+function createSoundbar() {
+  const soundbar = document.createElement('div');
+  soundbar.classList.add('soundbar');
+
+  for (let i = 0; i < bufferLength; i++) {
+    const bar = document.createElement('div');
+    bar.classList.add('soundbar__bar');
+    soundbar.appendChild(bar);
+  }
+
+  return soundbar;
+}
+
+function createDancer() {
+  const dancerContainer = document.createElement('div');
+  dancerContainer.classList.add('dancer-container');
+  const dancer = document.createElement('div');
+  dancer.id = 'dancer';
+  dancer.on('click', () => {
+    if (sound.playing) {
+      sound.stop();
+    } else {
+      sound.play();
+    }
+  });
+  dancerContainer.appendChild(dancer);
+
+  return dancerContainer;
+}
