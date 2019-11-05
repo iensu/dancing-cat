@@ -71,7 +71,7 @@ html, body {
 	height: var(--dancer-height);
 	width: var(--dancer-width);
   border-radius: 100%;
-  background: url('http://localhost:3000/nekojiru.png');
+  background: url('assets/nekojiru.png');
   background-repeat: no-repeat;
   background-position: center;
   background-size: var(--dancer-height) var(--dancer-width);

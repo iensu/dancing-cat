@@ -6,7 +6,7 @@ const defaultDancerWidth = parseInt(style.getPropertyValue('--dancer-width'));
 const sound = new Pizzicato.Sound(
   {
     source: 'file',
-    options: { path: 'http://localhost:3000/equals_sign_8_reprise.mp3' },
+    options: { path: 'assets/equals_sign_8_reprise.mp3' },
   },
   () => {
     dancerColumn.appendChild(createDancer());
