@@ -1,11 +1,14 @@
 {
-  "name": "web-apis",
+  "name": "dancing-cat",
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
   "scripts": {
     "start": "node server/index.js",
     "start:dev": "nodemon server/index.js",
+    "prerelease": "heroku container:push web -a dancing-cat",
+    "release": "heroku container:release web -a dancing-cat",
+    "postrelease": "heroku open -a dancing-cat",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,6 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "koa": "^2.11.0",
+    "koa-helmet": "^5.2.0",
     "koa-static": "^5.0.0",
     "koa2-cors": "^2.0.6"
   },
